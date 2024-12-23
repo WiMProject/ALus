@@ -126,9 +126,9 @@ def create_pdf_with_images(results):
     for file_name, label, confidence, image, predictions, categories in results:
         # Menambahkan nama file dan hasil diagnosa
         c.setFont("Helvetica", 12)
-        c.drawString(40, y_position, f"Nama File: {file_name}")
+        c.drawString(40, y_position, f"File Yang Diunggah: {file_name}")
         y_position -= 20
-        c.drawString(40, y_position, f"Prediksi: {label} ({confidence * 100:.2f}%)")
+        c.drawString(40, y_position, f"Hasil Diagnosa: {label} ({confidence * 100:.2f}%)")
         y_position -= 20
 
         # Menambahkan deskripsi penyakit dan tips kesehatan
