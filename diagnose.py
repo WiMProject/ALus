@@ -38,13 +38,13 @@ def plot_prediction(image, predictions, categories):
     # Menampilkan gambar asli
     ax[0].imshow(image)
     ax[0].axis('off')
-    ax[0].set_title("Input X-Ray Image", fontsize=14, weight='bold')
+    ax[0].set_title("Gambar Yang Diunggah", fontsize=14, weight='bold')
 
     # Menampilkan probabilitas prediksi dengan plot horizontal
     sns.barplot(x=predictions, y=categories, ax=ax[1], palette='coolwarm')
     ax[1].set_xlim(0, 1)
     ax[1].set_xlabel("Probability", fontsize=12)
-    ax[1].set_title("Predicted Class Probabilities", fontsize=14, weight='bold')
+    ax[1].set_title("Hasil Diagnosa", fontsize=14, weight='bold')
 
     plt.tight_layout()
     st.pyplot(fig)
