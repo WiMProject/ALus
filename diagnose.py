@@ -83,15 +83,18 @@ def add_disease_description_and_tips(c, label, y_position):
     }
 
     if label in descriptions:
-        c.setFont("Helvetica", 12)
-        c.drawString(40, y_position, "Deskripsi:")
+        # Mengatur ukuran font lebih kecil untuk deskripsi
+        c.setFont("Helvetica", 10)
+        c.drawString(40, y_position, "Deskripsi Penyakit:")
         y_position -= 20
         text = descriptions[label]
+        # Membagi teks menjadi beberapa baris dan menambahkannya
         for line in text.split('. '):
             c.drawString(60, y_position, f"- {line.strip()}.")
             y_position -= 20
 
-        c.drawString(40, y_position, "Keterangan:")
+        # Menambahkan tips kesehatan dengan ukuran font yang sama
+        c.drawString(40, y_position, "Tips Kesehatan:")
         y_position -= 20
         tip_text = tips[label]
         for line in tip_text.split('. '):
@@ -99,6 +102,7 @@ def add_disease_description_and_tips(c, label, y_position):
             y_position -= 20
 
     return y_position
+
 
 # Fungsi untuk membuat PDF dengan format medical check-up
 def create_pdf_with_images(results):
@@ -134,7 +138,7 @@ def create_pdf_with_images(results):
         # Menambahkan tabel probabilitas
         table_data = [["Kelas", "Probabilitas (%)"]] + list(zip(categories, [f"{p * 100:.2f}" for p in predictions]))
         table = Table(table_data, colWidths=[200, 150])
-        table.setStyle(TableStyle([
+        table.setStyle(TableStyle([  
             ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -171,6 +175,7 @@ def create_pdf_with_images(results):
     c.save()
     buffer.seek(0)
     return buffer
+
 
 # Fungsi untuk memproses file ZIP
 def process_zip_file(zip_file):
