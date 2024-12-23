@@ -8,6 +8,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 import io
+import matplotlib.pyplot as plt
 import logging
 
 # Mengatur logging untuk debug
@@ -26,6 +27,21 @@ def load_mobilenet_model():
 
 model = load_mobilenet_model()
 
+# Fungsi untuk membuat plot hasil prediksi
+def plot_prediction(image, predictions, categories):
+    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+
+    # Menampilkan gambar asli
+    ax[0].imshow(image)
+    ax[0].axis('off')
+
+    # Menampilkan probabilitas prediksi
+    ax[1].barh(categories, predictions, color='skyblue')
+    ax[1].set_xlim(0, 1)
+    ax[1].set_title("Predicted Class Probabilities")
+
+    st.pyplot(fig)
+
 # Fungsi untuk klasifikasi gambar
 def classify_image(image, model):
     try:
@@ -33,18 +49,19 @@ def classify_image(image, model):
         img = img_to_array(img) / 255.0
         img = np.expand_dims(img, axis=0)
 
-        pred = model.predict(img)
-        class_idx = np.argmax(pred, axis=1)[0]
+        pred = model.predict(img)[0]
         categories = ['covid', 'normal', 'pneumonia']
+        class_idx = np.argmax(pred)
         label = categories[class_idx]
-        confidence = np.max(pred)
-        return label, confidence
+        confidence = pred[class_idx]
+
+        return label, confidence, pred, categories
     except Exception as e:
         st.error(f"Error during image classification: {str(e)}")
         logging.error(f"Error during image classification: {str(e)}")
-        return None, None
+        return None, None, None, None
 
-# Fungsi untuk membuat PDF dengan gambar
+# Fungsi untuk membuat PDF dengan gambar dan hasil prediksi
 def create_pdf_with_images(results):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
@@ -57,7 +74,7 @@ def create_pdf_with_images(results):
     c.drawString(40, y_position, "----------------------------------")
     y_position -= 20
     
-    for file_name, label, confidence, image in results:
+    for file_name, label, confidence, image, predictions, categories in results:
         c.drawString(40, y_position, f"{file_name}: {label} ({confidence * 100:.2f}%)")
         y_position -= 20
 
@@ -84,9 +101,9 @@ def process_zip_file(zip_file):
                 if file_name.endswith(('.jpg', '.jpeg', '.png')):
                     with z.open(file_name) as f:
                         image = Image.open(f).convert('RGB')
-                        label, confidence = classify_image(image, model)
+                        label, confidence, predictions, categories = classify_image(image, model)
                         if label is not None:
-                            results.append((file_name, label, confidence, image))
+                            results.append((file_name, label, confidence, image, predictions, categories))
                 else:
                     st.warning(f"File {file_name} diabaikan karena bukan gambar.")
                     logging.warning(f"File {file_name} diabaikan karena bukan gambar.")
@@ -125,10 +142,11 @@ def display_diagnosis():
                     image = Image.open(uploaded_file).convert('RGB')
                     st.image(image, caption=f"Gambar: {uploaded_file.name}", width=300)
 
-                    label, confidence = classify_image(image, model)
+                    label, confidence, predictions, categories = classify_image(image, model)
                     if label is not None:
                         st.write(f"**{uploaded_file.name}**: {label} ({confidence * 100:.2f}%)")
-                        results.append((uploaded_file.name, label, confidence, image))
+                        plot_prediction(image, predictions, categories)
+                        results.append((uploaded_file.name, label, confidence, image, predictions, categories))
                     else:
                         st.write(f"Kesalahan dalam klasifikasi gambar {uploaded_file.name}.")
                 except Exception as e:
@@ -140,9 +158,10 @@ def display_diagnosis():
         if zip_file:
             st.write("### Hasil Diagnosa")
             results = process_zip_file(zip_file)
-            for file_name, label, confidence, image in results:
+            for file_name, label, confidence, image, predictions, categories in results:
                 st.image(image, caption=f"Gambar: {file_name}", width=300)
                 st.write(f"**{file_name}**: {label} ({confidence * 100:.2f}%)")
+                plot_prediction(image, predictions, categories)
 
     if results:
         pdf_buffer = create_pdf_with_images(results)
