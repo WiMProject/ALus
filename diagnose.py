@@ -1,8 +1,8 @@
 import streamlit as st
-from tensorflow.keras.models import load_model # type: ignore
+from tensorflow.keras.models import load_model  # type: ignore
 from PIL import Image
 import numpy as np
-from tensorflow.keras.preprocessing.image import img_to_array # type: ignore
+from tensorflow.keras.preprocessing.image import img_to_array  # type: ignore
 import zipfile
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -123,7 +123,7 @@ def display_diagnosis():
             for uploaded_file in uploaded_files:
                 try:
                     image = Image.open(uploaded_file).convert('RGB')
-                    st.image(image, caption=f"Gambar: {uploaded_file.name}", use_column_width=True)
+                    st.image(image, caption=f"Gambar: {uploaded_file.name}", width=300)
 
                     label, confidence = classify_image(image, model)
                     if label is not None:
@@ -141,7 +141,7 @@ def display_diagnosis():
             st.write("### Hasil Diagnosa")
             results = process_zip_file(zip_file)
             for file_name, label, confidence, image in results:
-                st.image(image, caption=f"Gambar: {file_name}", use_column_width=True)
+                st.image(image, caption=f"Gambar: {file_name}", width=300)
                 st.write(f"**{file_name}**: {label} ({confidence * 100:.2f}%)")
 
     if results:
