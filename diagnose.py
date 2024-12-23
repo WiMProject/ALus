@@ -8,27 +8,41 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 import io
+import logging
+
+# Mengatur logging untuk debug
+logging.basicConfig(level=logging.DEBUG)
 
 # Fungsi untuk memuat model
 @st.cache_resource
 def load_mobilenet_model():
-    model = load_model('model/mobilenetv2_final_model.keras')
-    return model
+    try:
+        model = load_model('model/mobilenetv2_final_model.keras')
+        return model
+    except Exception as e:
+        st.error(f"Gagal memuat model: {str(e)}")
+        logging.error(f"Error loading model: {str(e)}")
+        return None
 
 model = load_mobilenet_model()
 
 # Fungsi untuk klasifikasi gambar
 def classify_image(image, model):
-    img = image.resize((224, 224))
-    img = img_to_array(img) / 255.0
-    img = np.expand_dims(img, axis=0)
+    try:
+        img = image.resize((224, 224))
+        img = img_to_array(img) / 255.0
+        img = np.expand_dims(img, axis=0)
 
-    pred = model.predict(img)
-    class_idx = np.argmax(pred, axis=1)[0]
-    categories = ['covid', 'normal', 'pneumonia']
-    label = categories[class_idx]
-    confidence = np.max(pred)
-    return label, confidence
+        pred = model.predict(img)
+        class_idx = np.argmax(pred, axis=1)[0]
+        categories = ['covid', 'normal', 'pneumonia']
+        label = categories[class_idx]
+        confidence = np.max(pred)
+        return label, confidence
+    except Exception as e:
+        st.error(f"Error during image classification: {str(e)}")
+        logging.error(f"Error during image classification: {str(e)}")
+        return None, None
 
 # Fungsi untuk membuat PDF dengan gambar
 def create_pdf_with_images(results):
@@ -64,17 +78,32 @@ def create_pdf_with_images(results):
 # Fungsi untuk memproses file ZIP
 def process_zip_file(zip_file):
     results = []
-    with zipfile.ZipFile(zip_file) as z:
-        for file_name in z.namelist():
-            if file_name.endswith(('.jpg', '.jpeg', '.png')):
-                with z.open(file_name) as f:
-                    image = Image.open(f).convert('RGB')
-                    label, confidence = classify_image(image, model)
-                    results.append((file_name, label, confidence, image))
+    try:
+        with zipfile.ZipFile(zip_file) as z:
+            for file_name in z.namelist():
+                if file_name.endswith(('.jpg', '.jpeg', '.png')):
+                    with z.open(file_name) as f:
+                        image = Image.open(f).convert('RGB')
+                        label, confidence = classify_image(image, model)
+                        if label is not None:
+                            results.append((file_name, label, confidence, image))
+                else:
+                    st.warning(f"File {file_name} diabaikan karena bukan gambar.")
+                    logging.warning(f"File {file_name} diabaikan karena bukan gambar.")
+    except zipfile.BadZipFile:
+        st.error("File ZIP tidak valid atau rusak.")
+        logging.error("Bad ZIP file uploaded.")
+        return []
+    except Exception as e:
+        st.error(f"Kesalahan saat memproses file ZIP: {str(e)}")
+        logging.error(f"Error processing ZIP file: {str(e)}")
+        return []
+    
     return results
 
 def display_diagnosis():
     st.title("Diagnosa Penyakit Paru-Paru dengan Mobilenetv2")
+    
     option = st.radio("Pilih metode unggah:", ["Unggah beberapa gambar", "Unggah file ZIP"])
 
     results = []
@@ -87,13 +116,24 @@ def display_diagnosis():
 
         if uploaded_files:
             st.write("### Hasil Diagnosa")
-            for uploaded_file in uploaded_files:
-                image = Image.open(uploaded_file).convert('RGB')
-                st.image(image, caption=f"Gambar: {uploaded_file.name}", use_container_width=True)
+            if len(uploaded_files) > 20:
+                st.warning("Anda hanya dapat mengunggah maksimal 20 file sekaligus.")
+                return
 
-                label, confidence = classify_image(image, model)
-                st.write(f"**{uploaded_file.name}**: {label} ({confidence * 100:.2f}%)")
-                results.append((uploaded_file.name, label, confidence, image))
+            for uploaded_file in uploaded_files:
+                try:
+                    image = Image.open(uploaded_file).convert('RGB')
+                    st.image(image, caption=f"Gambar: {uploaded_file.name}", use_container_width=True)
+
+                    label, confidence = classify_image(image, model)
+                    if label is not None:
+                        st.write(f"**{uploaded_file.name}**: {label} ({confidence * 100:.2f}%)")
+                        results.append((uploaded_file.name, label, confidence, image))
+                    else:
+                        st.write(f"Kesalahan dalam klasifikasi gambar {uploaded_file.name}.")
+                except Exception as e:
+                    st.error(f"Terjadi kesalahan saat memproses gambar {uploaded_file.name}: {str(e)}")
+                    logging.error(f"Error processing image {uploaded_file.name}: {str(e)}")
 
     elif option == "Unggah file ZIP":
         zip_file = st.file_uploader("Unggah file ZIP berisi gambar", type=["zip"])
