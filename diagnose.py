@@ -13,6 +13,7 @@ import io
 import matplotlib.pyplot as plt
 import seaborn as sns
 import logging
+from datetime import datetime
 
 # Mengatur logging untuk debug
 logging.basicConfig(level=logging.DEBUG)
@@ -67,7 +68,39 @@ def classify_image(image, model):
         logging.error(f"Error during image classification: {str(e)}")
         return None, None, None, None
 
-# Fungsi untuk membuat PDF dengan gambar dan hasil prediksi
+# Fungsi untuk menambahkan deskripsi penyakit dan tips kesehatan pada PDF
+def add_disease_description_and_tips(c, label, y_position):
+    descriptions = {
+        "COVID-19": "COVID-19 adalah penyakit yang disebabkan oleh virus SARS-CoV-2, yang dapat menyebabkan infeksi pernapasan akut.",
+        "Pneumonia": "Pneumonia adalah infeksi paru-paru yang menyebabkan peradangan pada kantung udara, yang dapat terisi cairan atau nanah.",
+        "Normal": "Paru-paru Anda dalam kondisi normal. Tetap jaga kesehatan paru-paru Anda dengan menghindari merokok, menjaga kualitas udara, dan rutin berolahraga."
+    }
+
+    tips = {
+        "COVID-19": "Kenapa COVID-19? Virus SARS-CoV-2 dapat menyebar melalui droplet dan kontak langsung. Pastikan untuk selalu memakai masker, menjaga jarak, dan mencuci tangan.",
+        "Pneumonia": "Kenapa Pneumonia? Pneumonia dapat disebabkan oleh infeksi bakteri, virus, atau jamur. Risiko meningkat pada perokok, orang dengan sistem imun lemah, atau paparan polusi udara.",
+        "Normal": "Tips: Hindari merokok, lakukan olahraga secara teratur, makan makanan bergizi, dan lakukan pemeriksaan kesehatan rutin."
+    }
+
+    if label in descriptions:
+        c.setFont("Helvetica", 12)
+        c.drawString(40, y_position, "Deskripsi:")
+        y_position -= 20
+        text = descriptions[label]
+        for line in text.split('. '):
+            c.drawString(60, y_position, f"- {line.strip()}.")
+            y_position -= 20
+
+        c.drawString(40, y_position, "Keterangan:")
+        y_position -= 20
+        tip_text = tips[label]
+        for line in tip_text.split('. '):
+            c.drawString(60, y_position, f"- {line.strip()}.")
+            y_position -= 20
+
+    return y_position
+
+# Fungsi untuk membuat PDF dengan format medical check-up
 def create_pdf_with_images(results):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
@@ -75,11 +108,17 @@ def create_pdf_with_images(results):
 
     # Header
     c.setFont("Helvetica-Bold", 16)
-    c.drawString(40, height - 50, "Hasil Diagnosa Gambar Paru-Paru")
+    c.drawString(40, height - 50, "Hasil Medical Check-Up With ALus Diagnosa")
     c.setFont("Helvetica", 12)
-    c.drawString(40, height - 70, "----------------------------------")
+    c.drawString(40, height - 70, f"Tanggal: {datetime.now().strftime('%d-%m-%Y')}")
 
-    y_position = height - 100
+    # Informasi Institusi
+    c.setFont("Helvetica", 10)
+    c.drawString(40, height - 100, "ALus Diagmosa")
+    c.drawString(40, height - 115, "Jl. Kesehatan No. 123, Bandung")
+    c.drawString(40, height - 130, "Telp: 0878******** | Email: info@rsxyz.co.id")
+
+    y_position = height - 160
 
     for file_name, label, confidence, image, predictions, categories in results:
         # Menambahkan nama file dan hasil diagnosa
@@ -89,9 +128,12 @@ def create_pdf_with_images(results):
         c.drawString(40, y_position, f"Prediksi: {label} ({confidence * 100:.2f}%)")
         y_position -= 20
 
+        # Menambahkan deskripsi penyakit dan tips kesehatan
+        y_position = add_disease_description_and_tips(c, label, y_position)
+
         # Menambahkan tabel probabilitas
-        table_data = [["Kelas", "Probabilitas"]] + list(zip(categories, [f"{p * 100:.2f}%" for p in predictions]))
-        table = Table(table_data, colWidths=[100, 100])
+        table_data = [["Kelas", "Probabilitas (%)"]] + list(zip(categories, [f"{p * 100:.2f}" for p in predictions]))
+        table = Table(table_data, colWidths=[200, 150])
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -113,7 +155,12 @@ def create_pdf_with_images(results):
 
         if y_position < 100:
             c.showPage()
-            y_position = height - 100
+            y_position = height - 160
+
+    # Footer
+    c.setFont("Helvetica", 10)
+    c.drawString(40, 50, "Dokumen ini diterbitkan oleh ALus Diagnosa sebagai hasil diagnosa penyakit.")
+    c.drawString(40, 35, "Untuk informasi lebih lanjut, silakan konsultasikan lagi kepada dokter anda.")
 
     c.save()
     buffer.seek(0)
