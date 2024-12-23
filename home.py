@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 
 def display_home():
@@ -8,8 +9,15 @@ def display_home():
     <p style="text-align: center;">Aplikasi klasifikasi gambar paru-paru berdasarkan model MobileNetV2.</p>
     """, unsafe_allow_html=True)
 
-    # Menampilkan gambar di bawah deskripsi
-    st.image("Lung.jpg", use_column_width=True)
+    # Mendapatkan path absolut untuk file gambar
+    current_dir = os.path.dirname(__file__)
+    image_path = os.path.join(current_dir, "Lung.jpg")
+
+    # Memeriksa apakah file gambar ada
+    if os.path.exists(image_path):
+        st.image(image_path, use_column_width=True)
+    else:
+        st.error("Gambar tidak ditemukan. Pastikan file 'Lung.jpg' ada di folder yang benar.")
 
     # Teks justify
     st.markdown("""
