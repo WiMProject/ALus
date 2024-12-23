@@ -83,23 +83,22 @@ def add_disease_description_and_tips(c, label, y_position):
     }
 
     if label in descriptions:
-        # Mengatur ukuran font lebih kecil untuk deskripsi
-        c.setFont("Helvetica", 10)
-        c.drawString(40, y_position, "Deskripsi Penyakit:")
+        c.setFont("Helvetica", 10)  # Menurunkan ukuran font untuk deskripsi
+        c.drawString(40, y_position, "Deskripsi:")
         y_position -= 20
         text = descriptions[label]
-        # Membagi teks menjadi beberapa baris dan menambahkannya
-        for line in text.split('. '):
-            c.drawString(60, y_position, f"- {line.strip()}.")
-            y_position -= 20
+        c.drawString(60, y_position, text[:100])  # Memastikan dua baris pertama ditampilkan
+        y_position -= 20
+        c.drawString(60, y_position, text[100:])  # Sisa deskripsi pada baris kedua
+        y_position -= 20
 
-        # Menambahkan tips kesehatan dengan ukuran font yang sama
-        c.drawString(40, y_position, "Tips Kesehatan:")
+        c.drawString(40, y_position, "Keterangan:")
         y_position -= 20
         tip_text = tips[label]
-        for line in tip_text.split('. '):
-            c.drawString(60, y_position, f"- {line.strip()}.")
-            y_position -= 20
+        c.drawString(60, y_position, tip_text[:100])  # Memastikan dua baris pertama tips ditampilkan
+        y_position -= 20
+        c.drawString(60, y_position, tip_text[100:])  # Sisa tips pada baris kedua
+        y_position -= 20
 
     return y_position
 
