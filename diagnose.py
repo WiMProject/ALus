@@ -114,9 +114,9 @@ def create_pdf_with_images(results):
 
     # Informasi Institusi
     c.setFont("Helvetica", 10)
-    c.drawString(40, height - 100, "ALus Diagmosa")
+    c.drawString(40, height - 100, "ALus Diagnosa")
     c.drawString(40, height - 115, "Jl. Kesehatan No. 123, Bandung")
-    c.drawString(40, height - 130, "Telp: 0878******** | Email: info@rsxyz.co.id")
+    c.drawString(40, height - 130, "Telp: (021) 123-4567 | Email: info@rsxyz.co.id")
 
     y_position = height - 160
 
@@ -143,15 +143,21 @@ def create_pdf_with_images(results):
             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
         ]))
-        table.wrapOn(c, width, y_position)
-        table.drawOn(c, 40, y_position - 100)
-
-        y_position -= 120
+        table_width, table_height = table.wrap(0, 0)
+        if y_position - table_height < 100:
+            c.showPage()
+            y_position = height - 160
+        table.drawOn(c, 40, y_position - table_height)
+        y_position -= table_height + 20
 
         # Menambahkan gambar
         img = ImageReader(image)
-        c.drawImage(img, 40, y_position - 200, width=200, height=200)
-        y_position -= 240
+        img_width, img_height = 200, 200
+        if y_position - img_height < 100:
+            c.showPage()
+            y_position = height - 160
+        c.drawImage(img, 40, y_position - img_height, width=img_width, height=img_height)
+        y_position -= img_height + 20
 
         if y_position < 100:
             c.showPage()
@@ -159,8 +165,8 @@ def create_pdf_with_images(results):
 
     # Footer
     c.setFont("Helvetica", 10)
-    c.drawString(40, 50, "Dokumen ini diterbitkan oleh ALus Diagnosa sebagai hasil diagnosa penyakit.")
-    c.drawString(40, 35, "Untuk informasi lebih lanjut, silakan konsultasikan lagi kepada dokter anda.")
+    c.drawString(40, 50, "Dokumen ini diterbitkan oleh ALus Diagnosa sebagai hasil analisis X-Ray.")
+    c.drawString(40, 35, "Untuk informasi lebih lanjut, silakan hubungi dokter Anda.")
 
     c.save()
     buffer.seek(0)
