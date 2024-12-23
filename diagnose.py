@@ -38,7 +38,7 @@ def create_pdf_with_images(results):
     c.setFont("Helvetica", 12)
     y_position = height - 40
 
-    c.drawString(40, y_position, "Hasil Klasifikasi Gambar Paru-Paru")
+    c.drawString(40, y_position, "Hasil Diagnosa Gambar Paru-Paru")
     y_position -= 20
     c.drawString(40, y_position, "----------------------------------")
     y_position -= 20
@@ -74,7 +74,7 @@ def process_zip_file(zip_file):
     return results
 
 def display_diagnosis():
-    st.title("Klasifikasi Gambar Paru-Paru")
+    st.title("Diagnosa Penyakit Paru-Paru dengan Mobilenetv2")
     option = st.radio("Pilih metode unggah:", ["Unggah beberapa gambar", "Unggah file ZIP"])
 
     results = []
@@ -86,7 +86,7 @@ def display_diagnosis():
         )
 
         if uploaded_files:
-            st.write("### Hasil Klasifikasi")
+            st.write("### Hasil Diagnosa")
             for uploaded_file in uploaded_files:
                 image = Image.open(uploaded_file).convert('RGB')
                 st.image(image, caption=f"Gambar: {uploaded_file.name}", use_container_width=True)
@@ -98,7 +98,7 @@ def display_diagnosis():
     elif option == "Unggah file ZIP":
         zip_file = st.file_uploader("Unggah file ZIP berisi gambar", type=["zip"])
         if zip_file:
-            st.write("### Hasil Klasifikasi")
+            st.write("### Hasil Diagnosa")
             results = process_zip_file(zip_file)
             for file_name, label, confidence, image in results:
                 st.image(image, caption=f"Gambar: {file_name}", use_container_width=True)
@@ -107,8 +107,8 @@ def display_diagnosis():
     if results:
         pdf_buffer = create_pdf_with_images(results)
         st.download_button(
-            label="Unduh Hasil Klasifikasi (PDF)",
+            label="Unduh Hasil Diagnosa (PDF)",
             data=pdf_buffer,
-            file_name="hasil_klasifikasi.pdf",
+            file_name="hasil_diagnosa.pdf",
             mime="application/pdf"
         )
