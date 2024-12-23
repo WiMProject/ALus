@@ -1,4 +1,3 @@
-import os
 import streamlit as st
 
 def display_home():
@@ -10,12 +9,7 @@ def display_home():
     """, unsafe_allow_html=True)
 
     # Menampilkan gambar di bawah deskripsi
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    image_path = os.path.join(current_dir, "assets", "image.png")
-    if os.path.exists(image_path):
-        st.image(image_path, use_container_width=True)
-    else:
-        st.error(f"Gambar tidak ditemukan di path: {image_path}")
+    st.image("image.png", use_container_width=True)
 
     # Teks justify
     st.markdown("""
