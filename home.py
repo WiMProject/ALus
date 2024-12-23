@@ -9,7 +9,7 @@ def display_home():
     """, unsafe_allow_html=True)
 
     # Menampilkan gambar di bawah deskripsi
-    st.image("image.png", use_container_width=True)
+    st.image("Lung.jpg", use_column_width=True)
 
     # Teks justify
     st.markdown("""
