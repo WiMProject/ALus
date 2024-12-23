@@ -123,7 +123,7 @@ def display_diagnosis():
             for uploaded_file in uploaded_files:
                 try:
                     image = Image.open(uploaded_file).convert('RGB')
-                    st.image(image, caption=f"Gambar: {uploaded_file.name}", use_container_width=True)
+                    st.image(image, caption=f"Gambar: {uploaded_file.name}", use_column_width=True)
 
                     label, confidence = classify_image(image, model)
                     if label is not None:
@@ -141,7 +141,7 @@ def display_diagnosis():
             st.write("### Hasil Diagnosa")
             results = process_zip_file(zip_file)
             for file_name, label, confidence, image in results:
-                st.image(image, caption=f"Gambar: {file_name}", use_container_width=True)
+                st.image(image, caption=f"Gambar: {file_name}", use_column_width=True)
                 st.write(f"**{file_name}**: {label} ({confidence * 100:.2f}%)")
 
     if results:
