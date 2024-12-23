@@ -15,7 +15,7 @@ def display_home():
 
     # Memeriksa apakah file gambar ada
     if os.path.exists(image_path):
-        st.image(image_path, use_container_width=True)
+        st.image(image_path, use_column_width=True)
     else:
         st.error("Gambar tidak ditemukan. Pastikan file 'Lung.png' ada di folder yang benar.")
 
