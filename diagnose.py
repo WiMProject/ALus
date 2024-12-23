@@ -7,8 +7,11 @@ import zipfile
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
+from reportlab.lib import colors
+from reportlab.platypus import Table, TableStyle
 import io
 import matplotlib.pyplot as plt
+import seaborn as sns
 import logging
 
 # Mengatur logging untuk debug
@@ -29,17 +32,20 @@ model = load_mobilenet_model()
 
 # Fungsi untuk membuat plot hasil prediksi
 def plot_prediction(image, predictions, categories):
-    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+    fig, ax = plt.subplots(1, 2, figsize=(12, 6))
 
     # Menampilkan gambar asli
     ax[0].imshow(image)
     ax[0].axis('off')
+    ax[0].set_title("Input X-Ray Image", fontsize=14, weight='bold')
 
-    # Menampilkan probabilitas prediksi
-    ax[1].barh(categories, predictions, color='skyblue')
+    # Menampilkan probabilitas prediksi dengan plot horizontal
+    sns.barplot(x=predictions, y=categories, ax=ax[1], palette='coolwarm')
     ax[1].set_xlim(0, 1)
-    ax[1].set_title("Predicted Class Probabilities")
+    ax[1].set_xlabel("Probability", fontsize=12)
+    ax[1].set_title("Predicted Class Probabilities", fontsize=14, weight='bold')
 
+    plt.tight_layout()
     st.pyplot(fig)
 
 # Fungsi untuk klasifikasi gambar
@@ -50,7 +56,7 @@ def classify_image(image, model):
         img = np.expand_dims(img, axis=0)
 
         pred = model.predict(img)[0]
-        categories = ['covid', 'normal', 'pneumonia']
+        categories = ['COVID-19', 'Normal', 'Pneumonia']
         class_idx = np.argmax(pred)
         label = categories[class_idx]
         confidence = pred[class_idx]
@@ -66,27 +72,48 @@ def create_pdf_with_images(results):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
-    c.setFont("Helvetica", 12)
-    y_position = height - 40
 
-    c.drawString(40, y_position, "Hasil Diagnosa Gambar Paru-Paru")
-    y_position -= 20
-    c.drawString(40, y_position, "----------------------------------")
-    y_position -= 20
-    
+    # Header
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(40, height - 50, "Hasil Diagnosa Gambar Paru-Paru")
+    c.setFont("Helvetica", 12)
+    c.drawString(40, height - 70, "----------------------------------")
+
+    y_position = height - 100
+
     for file_name, label, confidence, image, predictions, categories in results:
-        c.drawString(40, y_position, f"{file_name}: {label} ({confidence * 100:.2f}%)")
+        # Menambahkan nama file dan hasil diagnosa
+        c.setFont("Helvetica", 12)
+        c.drawString(40, y_position, f"Nama File: {file_name}")
+        y_position -= 20
+        c.drawString(40, y_position, f"Prediksi: {label} ({confidence * 100:.2f}%)")
         y_position -= 20
 
+        # Menambahkan tabel probabilitas
+        table_data = [["Kelas", "Probabilitas"]] + list(zip(categories, [f"{p * 100:.2f}%" for p in predictions]))
+        table = Table(table_data, colWidths=[100, 100])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        table.wrapOn(c, width, y_position)
+        table.drawOn(c, 40, y_position - 100)
+
+        y_position -= 120
+
+        # Menambahkan gambar
         img = ImageReader(image)
-        if y_position < 240:
-            c.showPage()
-            y_position = height - 40
         c.drawImage(img, 40, y_position - 200, width=200, height=200)
-        y_position -= 220
-        if y_position < 40:
+        y_position -= 240
+
+        if y_position < 100:
             c.showPage()
-            y_position = height - 40
+            y_position = height - 100
 
     c.save()
     buffer.seek(0)
@@ -120,6 +147,7 @@ def process_zip_file(zip_file):
 
 def display_diagnosis():
     st.title("Diagnosa Penyakit Paru-Paru dengan Mobilenetv2")
+    st.write("Gunakan aplikasi ini untuk menganalisis gambar X-Ray paru-paru dan mendeteksi penyakit terkait seperti COVID-19, Normal, atau Pneumonia.")
     
     option = st.radio("Pilih metode unggah:", ["Unggah beberapa gambar", "Unggah file ZIP"])
 
