@@ -1,4 +1,6 @@
+import os
 import streamlit as st
+
 
 def display_home():
     # Menampilkan judul dan deskripsi
@@ -9,7 +11,10 @@ def display_home():
     """, unsafe_allow_html=True)
 
     # Menampilkan gambar di bawah deskripsi
-    st.image("ALus/assets/image.png", use_container_width=True)
+    current_dir = os.path.dirname(__file__)
+    image_path = os.path.join(current_dir, "assets", "image.png")
+    st.image(image_path, use_container_width=True)
+
 
     # Teks justify
     st.markdown("""
