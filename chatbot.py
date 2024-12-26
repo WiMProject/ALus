@@ -1,10 +1,5 @@
 import streamlit as st
 
-class Disease:
-    def __init__(self, name, cf):
-        self.name = name
-        self.cf = cf
-
 # Aturan gejala dan certainty factors
 rules = {
     "Flu": {
@@ -29,78 +24,88 @@ rules = {
     }
 }
 
-# Fungsi untuk menghitung certainty factor dan akurasi
+# Menghitung CF dan akurasi
 def calculate_cf(user_symptoms):
     disease_cf = {}
     
     for disease, rule in rules.items():
         matching_symptoms = set(user_symptoms).intersection(set(rule["symptoms"]))
         if matching_symptoms:
-            # Menghitung CF berdasarkan jumlah gejala yang cocok
             disease_cf[disease] = rule["cf"] * (len(matching_symptoms) / len(rule["symptoms"]))
     
     return disease_cf
 
 # Fungsi untuk memberikan respons dari chatbot
-def chatbot_response(user_input):
-    user_symptoms = user_input.lower().split(",")  # Memisahkan input gejala
-    user_symptoms = [symptom.strip() for symptom in user_symptoms if symptom.strip() != ""]
-
-    # Menghitung certainty factor
+def determine_diagnosis(user_symptoms):
     cf_results = calculate_cf(user_symptoms)
-
+    
     if not cf_results:
-        return ("Saya tidak dapat mengenali gejala tersebut. "
-                "Harap coba sebutkan gejala lain atau konsultasikan dengan dokter.")
+        return None, None
 
     # Mengembalikan diagnosis dengan certainty factor tertinggi
     diagnosis = max(cf_results, key=cf_results.get)
     certainty = cf_results[diagnosis]
-
-    response = f"Gejala Anda mungkin menunjukkan **{diagnosis}** dengan tingkat kepastian **{certainty:.2f}**.\n\n"
     
-    if diagnosis == "TBC":
-        response += ("TBC (Tuberkulosis) adalah infeksi serius yang menyerang paru-paru. "
-                     "Segera lakukan pemeriksaan lebih lanjut dan konsultasikan dengan dokter.")
-    elif diagnosis == "COVID-19":
-        response += ("COVID-19 adalah penyakit yang disebabkan oleh virus SARS-CoV-2. "
-                     "Segera lakukan tes COVID-19.")
-    elif diagnosis == "Flu":
-        response += ("Flu adalah infeksi virus yang biasanya sembuh sendiri dalam beberapa hari. "
-                     "Pastikan Anda beristirahat cukup.")
-    # Tambahan untuk diagnosis lainnya dapat ditambahkan di sini...
+    return diagnosis, certainty
 
-    return response
+# Fungsi untuk memulai kuis
+def start_quiz():
+    # Menggunakan session state untuk menyimpan pertanyaan
+    if "questions" not in st.session_state:
+        st.session_state.questions = [
+            "Apakah Anda mengalami batuk?",
+            "Apakah Anda mengalami demam?",
+            "Apakah Anda merasa lelah?",
+            "Apakah Anda mengalami sesak napas?",
+            "Apakah Anda mengalami nyeri dada?",
+            "Apakah Anda kehilangan indra penciuman atau perasa?",
+        ]
+        st.session_state.current_question_index = 0
+        st.session_state.user_symptoms = []
+        st.session_state.finished = False
 
-# Fungsi untuk tampilan chatbot
+    if st.session_state.finished:
+        diagnosis, certainty = determine_diagnosis(st.session_state.user_symptoms)
+        if diagnosis:
+            st.success(f"Gejala Anda mungkin menunjukkan **{diagnosis}** dengan tingkat kepastian **{certainty:.2f}**.")
+        else:
+            st.warning("Saya tidak dapat mengenali gejala tersebut.")
+
+        if st.button("Mulai Ulang Percakapan"):
+            st.session_state.finished = False
+            st.session_state.current_question_index = 0
+            st.session_state.user_symptoms = []
+            st.session_state.questions = [
+                "Apakah Anda mengalami batuk?",
+                "Apakah Anda mengalami demam?",
+                "Apakah Anda merasa lelah?",
+                "Apakah Anda mengalami sesak napas?",
+                "Apakah Anda mengalami nyeri dada?",
+                "Apakah Anda kehilangan indra penciuman atau perasa?",
+            ]
+        
+    else:
+        question = st.session_state.questions[st.session_state.current_question_index]
+        st.write(question)
+        col1, col2 = st.columns(2)
+        
+        if col1.button("Ya"):
+            st.session_state.user_symptoms.append(question.split()[2].lower())  # Menambahkan gejala yang sesuai
+            st.session_state.current_question_index += 1
+        if col2.button("Tidak"):
+            st.session_state.current_question_index += 1
+        
+        if st.session_state.current_question_index >= len(st.session_state.questions):
+            st.session_state.finished = True
+            
 def display_chatbot():
     st.title("Konsultasi Gejala Penyakit Paru")
-    st.write("Tanyakan gejala yang Anda alami, pisahkan dengan koma jika lebih dari satu.")
+    st.write("Tanyakan gejala yang Anda alami, jawab pertanyaan di bawah ini.")
 
-    # List percakapan
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-
-    # Menangani input dan output chatbot
-    user_input = st.text_input("Gejala Anda (pisahkan dengan koma):", "")
-
-    if user_input:
-        # Menambahkan pesan pengguna ke sesi
-        st.session_state.messages.append({"role": "user", "content": user_input})
-        # Mendapatkan respons dari chatbot
-        response = chatbot_response(user_input)
-        st.session_state.messages.append({"role": "bot", "content": response})
-
-    # Menampilkan percakapan
-    for message in st.session_state.messages:
-        if message["role"] == "user":
-            st.markdown(f"**Anda**: {message['content']}")
-        else:
-            st.markdown(f"**Dokter**: {message['content']}")
-
-    # Memberikan tombol untuk restart percakapan
-    if st.button("Mulai Ulang Percakapan"):
-        st.session_state.messages = []
+    if st.button("Mulai Percakapan"):
+        start_quiz()
+    else:
+        st.write("Tekan tombol di atas untuk mulai.")
 
 # Menjalankan aplikasi Streamlit
 if __name__ == "__main__":
