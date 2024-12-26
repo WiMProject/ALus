@@ -1,7 +1,7 @@
 import streamlit as st
 
-# Set konfigurasi halaman
-st.set_page_config(page_title="Konsultasi Gejala Penyakit Paru", layout="wide")
+# Hapus baris ini
+# st.set_page_config(page_title="Konsultasi Gejala Penyakit Paru", layout="wide")
 
 rules = {
     "Flu": {
@@ -32,7 +32,6 @@ def calculate_cf(user_symptoms):
     for disease, rule in rules.items():
         matching_symptoms = set(user_symptoms).intersection(set(rule["symptoms"]))
         if matching_symptoms:
-            # Menghitung CF berdasarkan jumlah gejala yang cocok
             disease_cf[disease] = rule["cf"] * (len(matching_symptoms) / len(rule["symptoms"]))
     
     return disease_cf
