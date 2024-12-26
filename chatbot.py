@@ -32,6 +32,7 @@ def calculate_cf(user_symptoms):
     for disease, rule in rules.items():
         matching_symptoms = set(user_symptoms).intersection(set(rule["symptoms"]))
         if matching_symptoms:
+            # Menghitung CF berdasarkan jumlah gejala yang cocok
             disease_cf[disease] = rule["cf"] * (len(matching_symptoms) / len(rule["symptoms"]))
     
     return disease_cf
