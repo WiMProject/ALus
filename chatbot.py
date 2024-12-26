@@ -1,12 +1,10 @@
 import streamlit as st
 
-# Hapus baris ini
-# st.set_page_config(page_title="Konsultasi Gejala Penyakit Paru", layout="wide")
-
+# Aturan gejala dan penyakit
 rules = {
     "Flu": {
         "symptoms": ["batuk", "demam", "lelah"],
-        "cf": 0.7
+        "cf": 0.9
     },
     "COVID-19": {
         "symptoms": ["batuk", "demam", "hilang indra perasa atau penciuman"],
@@ -14,15 +12,15 @@ rules = {
     },
     "Pneumonia": {
         "symptoms": ["batuk", "sesak napas", "nyeri dada"],
-        "cf": 0.8
+        "cf": 0.9
     },
     "Infeksi Saluran Pernapasan": {
         "symptoms": ["batuk", "sesak napas", "lelah"],
-        "cf": 0.6
+        "cf": 0.9
     },
     "TBC": {
         "symptoms": ["batuk", "sesak napas", "demam", "berat badan turun"],
-        "cf": 0.85
+        "cf": 0.9
     }
 }
 
