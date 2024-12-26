@@ -76,7 +76,8 @@ def start_quiz():
         st.subheader(f"Pertanyaan {st.session_state.current_question_index + 1}:")
         st.write(question)
 
-        col1, col2 = st.columns(2)
+        # Menggunakan kolom untuk mengatur tombol "Ya" dan "Tidak" lebih dekat
+        col1, col2 = st.columns([1, 1])  # Membuat dua kolom dengan lebar yang sama
         
         if col1.button("Ya"):
             st.session_state.user_symptoms.append(question.split()[2].lower())
@@ -84,6 +85,7 @@ def start_quiz():
         if col2.button("Tidak"):
             st.session_state.current_question_index += 1
         
+        # Memastikan pertanyaan berikutnya muncul
         if st.session_state.current_question_index >= len(st.session_state.questions):
             st.session_state.finished = True
 
