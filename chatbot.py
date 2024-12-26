@@ -1,34 +1,88 @@
 import streamlit as st
 
-# Fungsi untuk menangani percakapan chatbot
-def chatbot_response(user_input):
-    # Daftar respons berdasarkan gejala
-    responses = {
-        "batuk": "Batuk bisa menjadi gejala awal dari berbagai penyakit, termasuk flu, pneumonia, atau COVID-19. Jika batuk disertai demam atau sesak napas, segera periksa ke dokter.",
-        "demam": "Demam bisa menjadi gejala infeksi seperti flu atau COVID-19. Jika disertai dengan sesak napas atau nyeri dada, segera lakukan pemeriksaan lebih lanjut.",
-        "sesak napas": "Sesak napas adalah gejala serius yang perlu ditangani segera. Ini bisa menunjukkan pneumonia atau infeksi saluran pernapasan lain, termasuk COVID-19. Pastikan untuk segera mendapat perhatian medis.",
-        "nyeri dada": "Nyeri dada bisa disebabkan oleh berbagai kondisi, termasuk masalah jantung atau pneumonia. Jika nyeri dada disertai dengan sesak napas, segera hubungi dokter.",
-        "lelah": "Kelelahan bisa disebabkan oleh banyak hal, termasuk infeksi pernapasan seperti COVID-19 atau pneumonia. Jika gejala berlanjut, periksa lebih lanjut ke dokter.",
-        "mual": "Mual bisa disebabkan oleh banyak faktor, namun jika disertai gejala pernapasan, bisa jadi itu merupakan tanda infeksi paru-paru.",
-        "pusing": "Pusing bisa menjadi tanda masalah kesehatan lain yang perlu diperiksa lebih lanjut. Jika disertai sesak napas atau batuk, periksa kondisi paru-paru Anda.",
-        "hilang indra perasa atau penciuman": "Hilangnya indra perasa atau penciuman sering dikaitkan dengan infeksi COVID-19. Jika Anda memiliki gejala ini, pastikan untuk melakukan tes COVID-19.",
-        "normal": "Gejala Anda tidak menunjukkan tanda-tanda penyakit serius. Namun, tetap perhatikan kesehatan Anda dan lakukan pemeriksaan rutin jika diperlukan."
+class Disease:
+    def __init__(self, name, cf):
+        self.name = name
+        self.cf = cf
+
+# Aturan gejala dan certainty factors
+rules = {
+    "Flu": {
+        "symptoms": ["batuk", "demam", "lelah"],
+        "cf": 0.7
+    },
+    "COVID-19": {
+        "symptoms": ["batuk", "demam", "hilang indra perasa atau penciuman"],
+        "cf": 0.9
+    },
+    "Pneumonia": {
+        "symptoms": ["batuk", "sesak napas", "nyeri dada"],
+        "cf": 0.8
+    },
+    "Infeksi Saluran Pernapasan": {
+        "symptoms": ["batuk", "sesak napas", "lelah"],
+        "cf": 0.6
+    },
+    "TBC": {
+        "symptoms": ["batuk", "sesak napas", "demam", "berturut-turut"],
+        "cf": 0.85
     }
+}
+
+# Fungsi untuk menghitung certainty factor dan akurasi
+def calculate_cf(user_symptoms):
+    disease_cf = {}
     
-    # Mengembalikan respons berdasarkan input pengguna
-    return responses.get(user_input.lower(), "Saya tidak dapat mengenali gejala tersebut. Harap coba sebutkan gejala lain atau konsultasikan dengan dokter.")
+    for disease, rule in rules.items():
+        matching_symptoms = set(user_symptoms).intersection(set(rule["symptoms"]))
+        if matching_symptoms:
+            # Menghitung CF berdasarkan jumlah gejala yang cocok
+            disease_cf[disease] = rule["cf"] * (len(matching_symptoms) / len(rule["symptoms"]))
+    
+    return disease_cf
+
+# Fungsi untuk memberikan respons dari chatbot
+def chatbot_response(user_input):
+    user_symptoms = user_input.lower().split(",")  # Memisahkan input gejala
+    user_symptoms = [symptom.strip() for symptom in user_symptoms if symptom.strip() != ""]
+
+    # Menghitung certainty factor
+    cf_results = calculate_cf(user_symptoms)
+
+    if not cf_results:
+        return ("Saya tidak dapat mengenali gejala tersebut. "
+                "Harap coba sebutkan gejala lain atau konsultasikan dengan dokter.")
+
+    # Mengembalikan diagnosis dengan certainty factor tertinggi
+    diagnosis = max(cf_results, key=cf_results.get)
+    certainty = cf_results[diagnosis]
+
+    response = f"Gejala Anda mungkin menunjukkan **{diagnosis}** dengan tingkat kepastian **{certainty:.2f}**.\n\n"
+    
+    if diagnosis == "TBC":
+        response += ("TBC (Tuberkulosis) adalah infeksi serius yang menyerang paru-paru. "
+                     "Segera lakukan pemeriksaan lebih lanjut dan konsultasikan dengan dokter.")
+    elif diagnosis == "COVID-19":
+        response += ("COVID-19 adalah penyakit yang disebabkan oleh virus SARS-CoV-2. "
+                     "Segera lakukan tes COVID-19.")
+    elif diagnosis == "Flu":
+        response += ("Flu adalah infeksi virus yang biasanya sembuh sendiri dalam beberapa hari. "
+                     "Pastikan Anda beristirahat cukup.")
+    # Tambahan untuk diagnosis lainnya dapat ditambahkan di sini...
+
+    return response
 
 # Fungsi untuk tampilan chatbot
 def display_chatbot():
     st.title("Konsultasi Gejala Penyakit Paru")
-    st.write("Tanyakan gejala yang Anda alami dan saya akan memberikan informasi terkait gejala tersebut.")
+    st.write("Tanyakan gejala yang Anda alami, pisahkan dengan koma jika lebih dari satu.")
 
     # List percakapan
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
     # Menangani input dan output chatbot
-    user_input = st.text_input("Gejala Anda:", "")
+    user_input = st.text_input("Gejala Anda (pisahkan dengan koma):", "")
 
     if user_input:
         # Menambahkan pesan pengguna ke sesi
@@ -47,3 +101,7 @@ def display_chatbot():
     # Memberikan tombol untuk restart percakapan
     if st.button("Mulai Ulang Percakapan"):
         st.session_state.messages = []
+
+# Menjalankan aplikasi Streamlit
+if __name__ == "__main__":
+    display_chatbot()
