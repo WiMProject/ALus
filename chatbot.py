@@ -30,18 +30,18 @@ rules = {
 # Menghitung CF dan akurasi
 def calculate_cf(user_symptoms):
     disease_cf = {}
-    
+
     for disease, rule in rules.items():
         matching_symptoms = set(user_symptoms).intersection(set(rule["symptoms"]))
         if matching_symptoms:
             disease_cf[disease] = rule["cf"] * (len(matching_symptoms) / len(rule["symptoms"]))
-    
+
     return disease_cf
 
 # Fungsi untuk memberikan respons dari chatbot
 def determine_diagnosis(user_symptoms):
     cf_results = calculate_cf(user_symptoms)
-    
+
     if not cf_results:
         return None, None
 
@@ -91,10 +91,12 @@ def start_quiz():
         question = st.session_state.questions[st.session_state.current_question_index]
         st.subheader(f"Pertanyaan {st.session_state.current_question_index + 1}:")
         st.write(question)
+
+        # Menyiapkan kolom untuk tombol 'Ya' dan 'Tidak'
         col1, col2 = st.columns(2)
         
         if col1.button("Ya"):
-            st.session_state.user_symptoms.append(question.split()[2].lower())  # Menambahkan gejala yang sesuai
+            st.session_state.user_symptoms.append(question.split()[2].lower())
             st.session_state.current_question_index += 1
         if col2.button("Tidak"):
             st.session_state.current_question_index += 1
@@ -138,4 +140,3 @@ def display_chatbot():
 # Menjalankan aplikasi Streamlit
 if __name__ == "__main__":
     display_chatbot()
-
