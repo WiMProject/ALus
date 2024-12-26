@@ -4,7 +4,7 @@ import streamlit as st
 rules = {
     "Flu": {
         "symptoms": ["batuk", "demam", "lelah"],
-        "cf": 0.7
+        "cf": 0.8
     },
     "COVID-19": {
         "symptoms": ["batuk", "demam", "hilang indra perasa atau penciuman"],
@@ -16,11 +16,11 @@ rules = {
     },
     "Infeksi Saluran Pernapasan": {
         "symptoms": ["batuk", "sesak napas", "lelah"],
-        "cf": 0.6
+        "cf": 0.8
     },
     "TBC": {
         "symptoms": ["batuk", "sesak napas", "demam", "berturut-turut"],
-        "cf": 0.85
+        "cf": 0.8
     }
 }
 
@@ -86,6 +86,7 @@ def start_quiz():
         
     else:
         question = st.session_state.questions[st.session_state.current_question_index]
+        st.subheader(f"Pertanyaan {st.session_state.current_question_index + 1}:")
         st.write(question)
         col1, col2 = st.columns(2)
         
@@ -97,15 +98,40 @@ def start_quiz():
         
         if st.session_state.current_question_index >= len(st.session_state.questions):
             st.session_state.finished = True
-            
-def display_chatbot():
-    st.title("Konsultasi Gejala Penyakit Paru")
-    st.write("Tanyakan gejala yang Anda alami, jawab pertanyaan di bawah ini.")
 
-    if st.button("Mulai Percakapan"):
+def display_chatbot():
+    st.set_page_config(page_title="Konsultasi Gejala Penyakit Paru", layout="wide")
+    st.title("Konsultasi Gejala Penyakit Paru")
+    st.write("Selamat datang! Mari kita cari tahu gejala yang Anda alami.")
+
+    if st.button("Mulai Percakapan", key="start"):
         start_quiz()
     else:
         st.write("Tekan tombol di atas untuk mulai.")
+
+    # Menambahkan footer untuk mempercantik tampilan
+    st.markdown(
+        """
+        <style>
+            footer {
+                visibility: hidden;
+            }
+            .footer {
+                position: fixed;
+                left: 0;
+                bottom: 0;
+                width: 100%;
+                text-align: center;
+                font-size: 10px;
+                color: grey;
+            }
+        </style>
+        <div class="footer">
+            <p>© 2023 Konsultasi Gejala Penyakit Paru</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 # Menjalankan aplikasi Streamlit
 if __name__ == "__main__":
