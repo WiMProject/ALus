@@ -1,10 +1,13 @@
 import streamlit as st
 
+# Set konfigurasi halaman
+st.set_page_config(page_title="Konsultasi Gejala Penyakit Paru", layout="wide")
+
 # Aturan gejala dan certainty factors
 rules = {
     "Flu": {
         "symptoms": ["batuk", "demam", "lelah"],
-        "cf": 0.8
+        "cf": 0.7
     },
     "COVID-19": {
         "symptoms": ["batuk", "demam", "hilang indra perasa atau penciuman"],
@@ -16,11 +19,11 @@ rules = {
     },
     "Infeksi Saluran Pernapasan": {
         "symptoms": ["batuk", "sesak napas", "lelah"],
-        "cf": 0.8
+        "cf": 0.6
     },
     "TBC": {
         "symptoms": ["batuk", "sesak napas", "demam", "berturut-turut"],
-        "cf": 0.8
+        "cf": 0.85
     }
 }
 
@@ -100,7 +103,6 @@ def start_quiz():
             st.session_state.finished = True
 
 def display_chatbot():
-    st.set_page_config(page_title="Konsultasi Gejala Penyakit Paru", layout="wide")
     st.title("Konsultasi Gejala Penyakit Paru")
     st.write("Selamat datang! Mari kita cari tahu gejala yang Anda alami.")
 
@@ -136,3 +138,4 @@ def display_chatbot():
 # Menjalankan aplikasi Streamlit
 if __name__ == "__main__":
     display_chatbot()
+
