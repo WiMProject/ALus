@@ -29,16 +29,15 @@ def calculate_cf(user_symptoms):
     
     for disease, rule in rules.items():
         matching_symptoms = set(user_symptoms).intersection(set(rule["symptoms"]))
-        if matching_symptoms:
-            disease_cf[disease] = rule["cf"] * (len(matching_symptoms) / len(rule["symptoms"]))
+        disease_cf[disease] = rule["cf"] * (len(matching_symptoms) / len(rule["symptoms"])) if matching_symptoms else 0
     
     return disease_cf
 
 def determine_diagnosis(user_symptoms):
     cf_results = calculate_cf(user_symptoms)
     
-    if not cf_results:
-        return None, None
+    if not cf_results or all(cf == 0 for cf in cf_results.values()):
+        return None, 0.0  # Tidak ada diagnosa
 
     diagnosis = max(cf_results, key=cf_results.get)
     certainty = cf_results[diagnosis]
@@ -64,24 +63,26 @@ def start_quiz():
         if diagnosis:
             st.success(f"Gejala Anda mungkin menunjukkan **{diagnosis}** dengan tingkat kepastian **{certainty:.2f}**.")
         else:
-            st.warning("Saya tidak dapat mengenali gejala tersebut.")
+            st.warning("Saya tidak dapat mengenali gejala tersebut. Silakan konsultasikan dengan dokter Anda.")
 
         if st.button("Mulai Ulang Percakapan"):
             st.session_state.finished = False
             st.session_state.current_question_index = 0
             st.session_state.user_symptoms = []
-        
+            st.experimental_rerun()  # Restart the app to reset everything
+
     else:
         question = st.session_state.questions[st.session_state.current_question_index]
         st.subheader(f"Pertanyaan {st.session_state.current_question_index + 1}:")
         st.write(question)
 
-        col1, col2 = st.columns([1, 1])  # Membuat dua kolom dengan lebar yang sama
+        col1, col2 = st.columns(2)
         
         if col1.button("Ya"):
             st.session_state.user_symptoms.append(question.split()[2].lower())
             st.session_state.current_question_index += 1
             st.experimental_rerun()  # Refresh the app to show the next question
+            
         if col2.button("Tidak"):
             st.session_state.current_question_index += 1
             st.experimental_rerun()  # Refresh the app to show the next question
@@ -94,7 +95,7 @@ def display_chatbot():
     st.title("Konsultasi Gejala Penyakit Paru")
     st.write("Selamat datang! Mari kita cari tahu gejala yang Anda alami.")
 
-    if st.button("Mulai Percakapan", key="start"):
+    if st.button("Mulai Percakapan"):
         start_quiz()
     else:
         st.write("Tekan tombol di atas untuk mulai.")
@@ -102,4 +103,3 @@ def display_chatbot():
 # Menjalankan fungsi utama
 if __name__ == "__main__":
     display_chatbot()
-    
