@@ -22,7 +22,7 @@ st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Chatbot Penyakit Pa
 st.markdown("<h3 style='text-align: center; color: #808080;'>Tanya jawab mengenai penyakit paru, seperti COVID-19 dan pneumonia.</h3>", unsafe_allow_html=True)
 
 # Menambahkan gambar atau ikon di header (opsional)
-st.image("Lung.jpg", width=150)
+st.image("Lung.png", width=150)
 
 # Input pengguna dengan tampilan lebih cantik
 st.markdown("<h4>Silakan ajukan pertanyaan mengenai penyakit paru:</h4>", unsafe_allow_html=True)
