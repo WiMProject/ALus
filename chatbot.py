@@ -1,87 +1,41 @@
-import json
-import numpy as np
-import tensorflow as tf
 import streamlit as st
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+import json
 
-# Muat model yang telah dilatih dan tokenizer
-model = load_model('model/chatbot_ai_lstm_model.h5')
+# Muat file JSON yang berisi respons
+with open('model/responses.json', 'r', encoding='utf-8') as file:
+    responses = json.load(file)
 
-with open('model/chatbot_tokenizer.json', 'r') as file:
-    tokenizer_data = file.read()  # Membaca isi file sebagai string
-    tokenizer = tf.keras.preprocessing.text.tokenizer_from_json(tokenizer_data)
+# Fungsi untuk memberikan respons berdasarkan input pengguna
+def respond(user_input):
+    # Menjaga input tetap dalam huruf kecil dan menghapus spasi ekstra
+    user_input = user_input.strip().lower()
 
-# Define MAX_LEN (panjang input yang diinginkan)
-MAX_LEN = 20
-
-# Encoder-Decoder model (diambil dari model utama)
-encoder_inputs = model.input[0]  # Input untuk encoder
-encoder_outputs, state_h, state_c = model.layers[2].output  # Output dan state dari LSTM encoder
-encoder_states = [state_h, state_c]
-
-decoder_inputs = model.input[1]  # Input untuk decoder
-decoder_lstm = model.layers[4]  # LSTM decoder
-decoder_dense = model.layers[5]  # Dense layer output dari decoder
-
-# Membuat model encoder dan decoder terpisah untuk inference
-encoder_model = tf.keras.models.Model(encoder_inputs, encoder_states)
-
-decoder_state_input_h = tf.keras.Input(shape=(256,))
-decoder_state_input_c = tf.keras.Input(shape=(256,))
-decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
-
-decoder_lstm_outputs, state_h, state_c = decoder_lstm(
-    decoder_inputs, initial_state=decoder_states_inputs
-)
-decoder_states = [state_h, state_c]
-decoder_outputs = decoder_dense(decoder_lstm_outputs)
-
-decoder_model = tf.keras.models.Model(
-    [decoder_inputs] + decoder_states_inputs,
-    [decoder_outputs] + decoder_states
-)
-
-# Encode dan decode fungsi untuk chatbot
-def respond(input_text):
-    # Preprocessing input pengguna
-    input_seq = pad_sequences(tokenizer.texts_to_sequences([input_text]), maxlen=MAX_LEN, padding='post')
-
-    # Inference dengan encoder model
-    states_value = encoder_model.predict(input_seq)
-
-    target_seq = np.zeros((1, 1))
-    target_seq[0, 0] = tokenizer.word_index['startseq']
-
-    stop_condition = False
-    decoded_sentence = ''
-
-    while not stop_condition:
-        output_tokens, h, c = decoder_model.predict([target_seq] + states_value)
-        sampled_token_index = np.argmax(output_tokens[0, -1, :])
-        sampled_word = tokenizer.index_word.get(sampled_token_index, '')
-
-        decoded_sentence += ' ' + sampled_word
-
-        if sampled_word == 'endseq' or len(decoded_sentence.split()) > MAX_LEN:
-            stop_condition = True
-
-        target_seq = np.zeros((1, 1))
-        target_seq[0, 0] = sampled_token_index
-        states_value = [h, c]
-
-    return decoded_sentence.replace('endseq', '').strip()
+    # Cek apakah input pengguna ada dalam respons yang telah dipersiapkan
+    response = responses.get(user_input, "Maaf, saya tidak mengerti pertanyaan Anda.")
+    return response
 
 # Streamlit UI
-st.title("Chatbot Penyakit Paru")
-st.subheader("Tanya jawab mengenai penyakit paru, seperti COVID-19 dan pneumonia.")
+st.set_page_config(page_title="Chatbot Penyakit Paru", page_icon=":lungs:", layout="centered")
 
-user_input = st.text_input("Anda: ", "")
+# Tampilan header dengan logo atau ikon
+st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Chatbot Penyakit Paru</h1>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align: center; color: #808080;'>Tanya jawab mengenai penyakit paru, seperti COVID-19 dan pneumonia.</h3>", unsafe_allow_html=True)
 
+# Menambahkan gambar atau ikon di header (opsional)
+st.image("Lung.jpg", width=150)
+
+# Input pengguna dengan tampilan lebih cantik
+st.markdown("<h4>Silakan ajukan pertanyaan mengenai penyakit paru:</h4>", unsafe_allow_html=True)
+user_input = st.text_input("Anda: ", "", placeholder="Contoh: Gejala COVID-19")
+
+# Menambahkan respons chatbot dengan tampilan yang lebih menarik
 if user_input:
     response = respond(user_input)
-    st.write("Chatbot: ", response)
+    st.markdown(f"<div style='background-color: #f1f1f1; padding: 10px; border-radius: 5px; color: #333;'><strong>Chatbot: </strong>{response}</div>", unsafe_allow_html=True)
 
-# Menjalankan fungsi utama
+# Menambahkan footer atau keterangan
+st.markdown("<br><br><p style='text-align: center; color: #808080;'>Aplikasi ini dibangun untuk memberikan informasi seputar penyakit paru. Dapatkan informasi lebih lanjut dengan bertanya!</p>", unsafe_allow_html=True)
+
+# Menjalankan aplikasi dengan Streamlit
 if __name__ == "__main__":
-    display_chatbot()
+    st.write("Silakan ajukan pertanyaan tentang penyakit paru!")
