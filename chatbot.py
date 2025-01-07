@@ -6,9 +6,9 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 # Muat model yang telah dilatih dan tokenizer
-model = load_model('/model/chatbot_ai_lstm_model.h5')
+model = load_model('model/chatbot_ai_lstm_model.h5')
 
-with open('/model/chatbot_tokenizer.json', 'r') as file:
+with open('model/chatbot_tokenizer.json', 'r') as file:
     tokenizer_data = json.load(file)
     tokenizer = tf.keras.preprocessing.text.tokenizer_from_json(tokenizer_data)
 
