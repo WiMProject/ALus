@@ -15,15 +15,39 @@ with open('model/chatbot_tokenizer.json', 'r') as file:
 # Define MAX_LEN (panjang input yang diinginkan)
 MAX_LEN = 20
 
+# Encoder-Decoder model (diambil dari model utama)
+encoder_inputs = model.input[0]  # Input untuk encoder
+encoder_outputs, state_h, state_c = model.layers[2].output  # Output dan state dari LSTM encoder
+encoder_states = [state_h, state_c]
+
+decoder_inputs = model.input[1]  # Input untuk decoder
+decoder_lstm = model.layers[4]  # LSTM decoder
+decoder_dense = model.layers[5]  # Dense layer output dari decoder
+
+# Membuat model encoder dan decoder terpisah untuk inference
+encoder_model = tf.keras.models.Model(encoder_inputs, encoder_states)
+
+decoder_state_input_h = tf.keras.Input(shape=(256,))
+decoder_state_input_c = tf.keras.Input(shape=(256,))
+decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
+
+decoder_lstm_outputs, state_h, state_c = decoder_lstm(
+    decoder_inputs, initial_state=decoder_states_inputs
+)
+decoder_states = [state_h, state_c]
+decoder_outputs = decoder_dense(decoder_lstm_outputs)
+
+decoder_model = tf.keras.models.Model(
+    [decoder_inputs] + decoder_states_inputs,
+    [decoder_outputs] + decoder_states
+)
+
 # Encode dan decode fungsi untuk chatbot
 def respond(input_text):
     # Preprocessing input pengguna
     input_seq = pad_sequences(tokenizer.texts_to_sequences([input_text]), maxlen=MAX_LEN, padding='post')
 
-    # Model inference
-    encoder_model = model.get_layer('encoder_model')
-    decoder_model = model.get_layer('decoder_model')
-
+    # Inference dengan encoder model
     states_value = encoder_model.predict(input_seq)
 
     target_seq = np.zeros((1, 1))
