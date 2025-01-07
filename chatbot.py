@@ -1,7 +1,7 @@
 import streamlit as st
 import json
 
-# Setel konfigurasi halaman di awal
+# Setel konfigurasi halaman di awal, sebelum ada kode lain
 st.set_page_config(page_title="Chatbot Penyakit Paru", page_icon=":lungs:", layout="centered")
 
 # Muat file JSON yang berisi respons
