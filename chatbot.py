@@ -1,6 +1,8 @@
 import streamlit as st
 import json
 
+# Setel konfigurasi halaman di awal
+st.set_page_config(page_title="Chatbot Penyakit Paru", page_icon=":lungs:", layout="centered")
 
 # Muat file JSON yang berisi respons
 with open('model/responses.json', 'r', encoding='utf-8') as file:
@@ -8,17 +10,12 @@ with open('model/responses.json', 'r', encoding='utf-8') as file:
 
 # Fungsi untuk memberikan respons berdasarkan input pengguna
 def respond(user_input):
-    # Menjaga input tetap dalam huruf kecil dan menghapus spasi ekstra
     user_input = user_input.strip().lower()
-
-    # Cek apakah input pengguna ada dalam respons yang telah dipersiapkan
     response = responses.get(user_input, "Maaf, saya tidak mengerti pertanyaan Anda.")
     return response
 
 # Streamlit UI
 def display_chatbot():
-    st.set_page_config(page_title="Chatbot Penyakit Paru", page_icon=":lungs:", layout="centered")
-    
     # Tampilan header dengan logo atau ikon
     st.markdown("<h1 style='text-align: center; color: #4CAF50;'>Chatbot Penyakit Paru</h1>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align: center; color: #808080;'>Tanya jawab mengenai penyakit paru, seperti COVID-19 dan pneumonia.</h3>", unsafe_allow_html=True)
@@ -37,7 +34,7 @@ def display_chatbot():
     
     # Menambahkan footer atau keterangan
     st.markdown("<br><br><p style='text-align: center; color: #808080;'>Aplikasi ini dibangun untuk memberikan informasi seputar penyakit paru. Dapatkan informasi lebih lanjut dengan bertanya!</p>", unsafe_allow_html=True)
-    
-    # Menjalankan aplikasi dengan Streamlit
-    if __name__ == "__main__":
-        st.write("Silakan ajukan pertanyaan tentang penyakit paru!")
+
+# Menjalankan aplikasi dengan Streamlit
+if __name__ == "__main__":
+    display_chatbot()
