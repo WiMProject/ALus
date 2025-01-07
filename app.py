@@ -1,7 +1,7 @@
 import streamlit as st
 
 # Menetapkan konfigurasi halaman agar tidak ada sidebar
-st.set_page_config(page_title="ALus", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="ALus", page_icon=":lungs:", layout="wide", initial_sidebar_state="collapsed")
 
 from home import display_home
 from diagnose import display_diagnosis
